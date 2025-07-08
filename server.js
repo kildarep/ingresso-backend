@@ -1,19 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+const cors = require('cors'); // Mantenha esta linha
 
 // Importa o Firebase Admin SDK
 const admin = require('firebase-admin');
 
-
-// Por exemplo, no Render:
-// Key: FIREBASE_SERVICE_ACCOUNT
-// Value: { "type": "service_account", "project_id": "...", "private_key_id": "...", ... } (todo o JSON aqui)
-
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
   console.error('Erro: A variável de ambiente FIREBASE_SERVICE_ACCOUNT não está definida.');
   console.error('Certifique-se de configurar esta variável no Render com o conteúdo do seu arquivo de chave de conta de serviço do Firebase.');
-  
   process.exit(1); 
 }
 
@@ -28,7 +22,10 @@ const db = admin.firestore();
 const app = express();
 const PORT = process.env.PORT || 3000; 
 
-app.use(cors()); 
+
+app.use(cors({
+  origin: 'https://ingresso-frontend.onrender.com' 
+}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -36,7 +33,6 @@ app.post('/comprar-ingresso', async (req, res) => {
   const { nome, celular } = req.body;
   
   try {
-    
     const docRef = await db.collection('compras').add({
       nome: nome,
       celular: celular,
