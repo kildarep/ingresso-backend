@@ -1,8 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cors = require('cors'); // Mantenha esta linha
+const cors = require('cors'); 
 
-// Importa o Firebase Admin SDK
 const admin = require('firebase-admin');
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -23,13 +22,28 @@ const app = express();
 const PORT = process.env.PORT || 3000; 
 
 
+const allowedOrigins = ['https://ingresso-frontend.onrender.com']; 
+
 app.use(cors({
-  origin: 'https://ingresso-frontend.onrender.com' 
+  origin: function (origin, callback) {
+   
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'OPTIONS'], 
+  allowedHeaders: ['Content-Type'], 
+  credentials: true 
 }));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post('/comprar-ingresso', async (req, res) => { 
+  console.log('Requisição POST recebida para /comprar-ingresso!');
+  console.log('Dados recebidos:', req.body);
+
   const { nome, celular } = req.body;
   
   try {
