@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors'); 
-
 const admin = require('firebase-admin');
 
 if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
@@ -19,34 +18,21 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const app = express();
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000;
 
-
-app.use((req, res, next) => {
-  
-  const allowedOrigin = 'https://ingresso-frontend.onrender.com'; 
-
-  res.header('Access-Control-Allow-Origin', allowedOrigin);
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type'); 
-  res.header('Access-Control-Allow-Credentials', 'true'); 
-
-  if (req.method === 'OPTIONS') {
-    console.log('Requisição OPTIONS (preflight) recebida e respondida manualmente.');
-    return res.status(204).send(); 
-  }
-  next(); 
-});
-
+// Middleware para CORS
 app.use(cors({
-  origin: 'https://ingresso-frontend.onrender.com', 
-  methods: ['GET', 'POST', 'OPTIONS'], 
-  allowedHeaders: ['Content-Type'], 
-  credentials: true 
+  origin: 'https://ingresso-frontend.onrender.com',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+  credentials: true
 }));
 
+// Middlewares para parsear os dados do body
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json()); // Para lidar com JSON, se necessário
 
+// Rota para compra de ingresso
 app.post('/comprar-ingresso', async (req, res) => { 
   console.log('Requisição POST recebida para /comprar-ingresso!');
   console.log('Dados recebidos:', req.body);
@@ -69,26 +55,29 @@ app.post('/comprar-ingresso', async (req, res) => {
   }
 });
 
+// Rota para listar pagamentos (admin)
 app.get('/lista-pagamentos2311', async (req, res) => { 
-    try {
-        const comprasSnapshot = await db.collection('compras').orderBy('dataRegistro', 'desc').get();
-        let data = '';
-        if (comprasSnapshot.empty) {
-            return res.status(200).send('Nenhum pagamento registrado ainda.');
-        }
-
-        comprasSnapshot.forEach(doc => {
-            const compra = doc.data();
-            const dataFormatada = compra.dataRegistro ? new Date(compra.dataRegistro._seconds * 1000).toLocaleString('pt-BR') : 'N/A';
-            data += `Nome: ${compra.nome}, Celular: ${compra.celular}, Data: ${dataFormatada}\n`;
-        });
-        res.status(200).type('text/plain').send(data);
-    } catch (err) {
-        console.error('Erro ao ler do Firestore:', err);
-        return res.status(500).send('Erro ao ler os pagamentos.');
+  try {
+    const comprasSnapshot = await db.collection('compras').orderBy('dataRegistro', 'desc').get();
+    let data = '';
+    if (comprasSnapshot.empty) {
+      return res.status(200).send('Nenhum pagamento registrado ainda.');
     }
+
+    comprasSnapshot.forEach(doc => {
+      const compra = doc.data();
+      const dataFormatada = compra.dataRegistro ? new Date(compra.dataRegistro._seconds * 1000).toLocaleString('pt-BR') : 'N/A';
+      data += `Nome: ${compra.nome}, Celular: ${compra.celular}, Data: ${dataFormatada}\n`;
+    });
+
+    res.status(200).type('text/plain').send(data);
+  } catch (err) {
+    console.error('Erro ao ler do Firestore:', err);
+    return res.status(500).send('Erro ao ler os pagamentos.');
+  }
 });
-  
+
+// Inicia o servidor
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
