@@ -22,11 +22,10 @@ const app = express();
 const PORT = process.env.PORT || 3000; 
 
 
-const allowedOrigins = ['https://ingresso-frontend.onrender.com']; 
+const allowedOrigins = ['https://ingresso-frontend.onrender.com']; // <--- Confirme que esta URL está 100% correta!
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
-   
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -36,7 +35,13 @@ app.use(cors({
   methods: ['GET', 'POST', 'OPTIONS'], 
   allowedHeaders: ['Content-Type'], 
   credentials: true 
-}));
+};
+
+
+app.use(cors(corsOptions));
+
+
+app.options('/comprar-ingresso', cors(corsOptions)); 
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
