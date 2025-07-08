@@ -22,15 +22,28 @@ const app = express();
 const PORT = process.env.PORT || 3000; 
 
 
+app.use((req, res, next) => {
+  
+  const allowedOrigin = 'https://ingresso-frontend.onrender.com'; 
+
+  res.header('Access-Control-Allow-Origin', allowedOrigin);
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type'); 
+  res.header('Access-Control-Allow-Credentials', 'true'); 
+
+  if (req.method === 'OPTIONS') {
+    console.log('Requisição OPTIONS (preflight) recebida e respondida manualmente.');
+    return res.status(204).send(); 
+  }
+  next(); 
+});
+
 app.use(cors({
-  origin: '*', 
+  origin: 'https://ingresso-frontend.onrender.com', 
   methods: ['GET', 'POST', 'OPTIONS'], 
   allowedHeaders: ['Content-Type'], 
   credentials: true 
 }));
-
-app.options('/comprar-ingresso', cors()); 
-
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -48,7 +61,7 @@ app.post('/comprar-ingresso', async (req, res) => {
     });
     
     console.log('Novo pagamento recebido e salvo no Firestore com ID:', docRef.id);
-    res.send('Dados recebidos com sucesso!');
+    res.status(200).send('Dados recebidos com sucesso!'); 
 
   } catch (err) {
     console.error('Erro ao salvar no Firestore:', err);
@@ -69,7 +82,7 @@ app.get('/lista-pagamentos2311', async (req, res) => {
             const dataFormatada = compra.dataRegistro ? new Date(compra.dataRegistro._seconds * 1000).toLocaleString('pt-BR') : 'N/A';
             data += `Nome: ${compra.nome}, Celular: ${compra.celular}, Data: ${dataFormatada}\n`;
         });
-        res.type('text/plain').send(data);
+        res.status(200).type('text/plain').send(data);
     } catch (err) {
         console.error('Erro ao ler do Firestore:', err);
         return res.status(500).send('Erro ao ler os pagamentos.');
